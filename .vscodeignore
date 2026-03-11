@@ -1,0 +1,12 @@
+node_modules
+out/
+src/**/*
+tsconfig.json
+esbuild.js
+vsc-extension-quickstart.md
+eslint.config.mjs
+.vscode/**
+.vscode-test/**
+**/.vscode-test.*
+.gitignore
+.yarnrc

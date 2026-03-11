@@ -1,0 +1,42 @@
+<mvc:View
+    controllerName="sap.m.sample.InputValueUpdate.C"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form">
+    <form:SimpleForm 
+editable="true" 
+        layout="ResponsiveGridLayout">
+        <Label text="ValueLiveUpdate" />
+        <Switch state="{/ValueLiveUpdate}" />
+
+        <Label text="Type here" />
+        <Input
+            value="{/InputValue}"
+            liveChange=".onLiveChange" />
+
+        <Label text="Type here" />
+        <Input
+            value="{/InputValue2}"
+            liveChange=".onLiveChange" />
+
+        <Label text="oInput.getValue()" />
+        <Text 
+            
+            id="getValue"
+            text="{
+                sorter: [{path: 'some'}, {path: 'thing'}],
+                parts: [
+                    '/InputValue',
+                    '/InputValue2'
+                ],
+                formatter: '.formatter.getTextValue'
+            }"/>
+
+        <Label text="oModel.getProperty()"/>
+        <Text 
+            id="getValue2"
+            text="{
+                path: '/InputValue'
+            }" />
+    </form:SimpleForm>
+</mvc:View>

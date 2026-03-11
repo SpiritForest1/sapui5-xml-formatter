@@ -1,0 +1,69 @@
+{
+  "name": "xml-formatter",
+  "displayName": "XML Formatter Custom",
+  "description": "Formats XML files with custom indentation, attributes on new lines, multiline value handling, and optional attribute sorting.",
+  "version": "0.0.5",
+  "publisher": "Dzmitry_Zakhar",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Formatters"
+  ],
+  "activationEvents": [
+    "onLanguage:xml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "xml",
+        "extensions": [
+          ".xml",
+          ".xsd",
+          ".xslt",
+          ".xaml"
+        ],
+        "aliases": [
+          "XML"
+        ]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "XML Formatter",
+      "properties": {
+        "xmlFormatter.indentWithSpaces": {
+          "type": "boolean",
+          "default": null,
+          "description": "Use spaces instead of tabs for indentation"
+        },
+        "xmlFormatter.indentSize": {
+          "type": "number",
+          "default": null,
+          "description": "Number of spaces to use when indentWithSpaces is true"
+        },
+        "xmlFormatter.sortAttributes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Sort attributes alphabetically"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "check-types": "tsc --noEmit",
+    "package": "npm run check-types && node esbuild.js --production && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.0.0",
+    "@types/vscode": "^1.100.0"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.8.11"
+  }
+}
