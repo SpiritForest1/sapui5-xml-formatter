@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
-		"module": "Node16",
+		"module": "CommonJS",
 		"target": "ES2022",
-		"outDir": "out",
+		"outDir": "dist",
 		"lib": [
 			"ES2022"
 		],

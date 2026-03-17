@@ -2,7 +2,7 @@
   "name": "xml-formatter",
   "displayName": "XML Formatter Custom",
   "description": "Formats XML files with custom indentation, attributes on new lines, multiline value handling, and optional attribute sorting.",
-  "version": "0.0.5",
+  "version": "0.0.8",
   "publisher": "Dzmitry_Zakhar",
   "engines": {
     "vscode": "^1.100.0"
@@ -52,18 +52,28 @@
     }
   },
   "scripts": {
+    "clean": "rimraf dist",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch:ts": "tsc -w -p ./",
+    "dev": "node esbuild.js --watch",
+    "build": "npm run clean && npm run compile && node esbuild.js --production",
     "check-types": "tsc --noEmit",
-    "package": "npm run check-types && node esbuild.js --production && vsce package"
+    "test": "mocha --require ts-node/register \"src/test/**/*.spec.ts\"",
+    "package": "npm run check-types && npm run build && vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "esbuild": "^0.27.3",
+    "rimraf": "^5.0.0",
     "typescript": "^5.0.0",
-    "@types/vscode": "^1.100.0"
+    "@types/vscode": "^1.100.0",
+    "mocha": "^11.0.0",
+    "chai": "^4.3.0",
+    "ts-node": "^10.0.0",
+    "@types/mocha": "^10.0.0",
+    "@types/chai": "^4.3.0"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.11"
+    "xml_parser": "file:./xml_parser"
   }
 }

@@ -1,4 +1,5 @@
 node_modules
+xml_parser/node_modules
 out/
 src/**/*
 tsconfig.json

@@ -1,0 +1,17 @@
+{
+  "name": "xml_parser",
+  "version": "1.0.0",
+  "description": "Parses SAPUI5 xml views and fragments",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive",
+    "test:watch": "mocha --recursive --watch"
+  },
+  "author": "Dzmitry Zakhar",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^6.2.2",
+    "mocha": "^11.7.5"
+  }
+}
