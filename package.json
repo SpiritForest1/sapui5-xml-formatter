@@ -2,8 +2,12 @@
   "name": "xml-formatter",
   "displayName": "XML Formatter Custom",
   "description": "Formats XML files with custom indentation, attributes on new lines, multiline value handling, and optional attribute sorting.",
-  "version": "0.0.8",
-  "publisher": "Dzmitry_Zakhar",
+  "version": "0.0.9",
+  "publisher": "Dzmitry-Zakhar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SpiritForest1/sapui5-xml-formatter.git"
+  },
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -47,6 +51,11 @@
           "type": "boolean",
           "default": true,
           "description": "Sort attributes alphabetically"
+        },
+        "xmlFormatter.compactBinding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Format binding array items on a single line (compact style)"
         }
       }
     }
@@ -62,16 +71,17 @@
     "package": "npm run check-types && npm run build && vsce package"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "esbuild": "^0.27.3",
-    "rimraf": "^5.0.0",
-    "typescript": "^5.0.0",
-    "@types/vscode": "^1.100.0",
-    "mocha": "^11.0.0",
-    "chai": "^4.3.0",
-    "ts-node": "^10.0.0",
+    "@types/chai": "^4.3.0",
     "@types/mocha": "^10.0.0",
-    "@types/chai": "^4.3.0"
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.100.0",
+    "@vscode/vsce": "^3.7.1",
+    "chai": "^4.3.0",
+    "esbuild": "^0.27.3",
+    "mocha": "^11.0.0",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "xml_parser": "file:./xml_parser"

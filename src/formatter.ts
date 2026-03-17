@@ -5,10 +5,77 @@ export type XmlNode = {
 };
 
 function normalizeString(value: string) {
-	return value
-		.replaceAll(/\s+/g, ' ')
-		.replaceAll(/'/g, '"')
-		.replaceAll(/(\w+)(?=\s*:)/g, '"$1"');
+	// Collapse whitespace first
+	const collapsed = value.replaceAll(/\s+/g, ' ');
+
+	// Process character by character to only modify content outside string literals
+	let result = '';
+	let i = 0;
+	while (i < collapsed.length) {
+		const ch = collapsed[i];
+		if (ch === "'" || ch === '"') {
+			// Collect the full string, normalizing single-quotes to double-quotes
+			let str = '"';
+			i++;
+			while (i < collapsed.length && collapsed[i] !== ch) {
+				if (collapsed[i] === '\\') {
+					str += collapsed[i];
+					i++;
+				}
+				str += collapsed[i];
+				i++;
+			}
+			str += '"';
+			i++; // skip closing quote
+			result += str;
+		} else {
+			result += ch;
+			i++;
+		}
+	}
+
+	// Quote unquoted object keys (word characters followed by optional space and colon, outside strings)
+	// We process again token-by-token so we don't accidentally quote inside strings
+	let quoted = '';
+	let j = 0;
+	while (j < result.length) {
+		const ch = result[j];
+		if (ch === '"') {
+			// Skip over string
+			quoted += ch;
+			j++;
+			while (j < result.length && result[j] !== '"') {
+				if (result[j] === '\\') {
+					quoted += result[j];
+					j++;
+				}
+				quoted += result[j];
+				j++;
+			}
+			quoted += '"';
+			j++;
+		} else if (/\w/.test(ch)) {
+			// Collect word
+			let word = '';
+			while (j < result.length && /\w/.test(result[j])) {
+				word += result[j];
+				j++;
+			}
+			// Check if followed by optional spaces then colon (object key pattern)
+			let k = j;
+			while (k < result.length && result[k] === ' ') k++;
+			if (k < result.length && result[k] === ':' && result[k + 1] !== ':') {
+				quoted += `"${word}"`;
+			} else {
+				quoted += word;
+			}
+		} else {
+			quoted += ch;
+			j++;
+		}
+	}
+
+	return quoted;
 }
 
 function isParsable(value: string) {
@@ -21,7 +88,31 @@ function isParsable(value: string) {
 	}
 }
 
-function formatMultilineValue(value: string, indent: string, optionsIndent: string): string {
+function formatCompactValue(value: string): string {
+	const normalized = normalizeString(value);
+	if (!isParsable(value)) {
+		return value;
+	}
+	const jsValue = JSON.parse(normalized);
+	if (typeof jsValue === 'string') {
+		return `'${jsValue}'`;
+	} else if (typeof jsValue === 'boolean' || typeof jsValue === 'number') {
+		return String(jsValue);
+	} else if (jsValue === null) {
+		return 'null';
+	} else if (isObject(jsValue)) {
+		const parts: string[] = [];
+		for (const key in jsValue) {
+			parts.push(`${key}: ${formatCompactValue(JSON.stringify((jsValue as any)[key]))}`);
+		}
+		return `{ ${parts.join(', ')} }`;
+	} else if (Array.isArray(jsValue)) {
+		return `[${jsValue.map(item => formatCompactValue(JSON.stringify(item))).join(', ')}]`;
+	}
+	return value;
+}
+
+function formatMultilineValue(value: string, indent: string, optionsIndent: string, compact?: boolean): string {
 	let result = "";
 	const formattedValue = normalizeString(value);
 
@@ -44,7 +135,7 @@ function formatMultilineValue(value: string, indent: string, optionsIndent: stri
 		for (const key in jsValue) {
 			const resultingIndent = indent ? indent + optionsIndent : optionsIndent.repeat(2);
 			const xmlObjKey = resultingIndent + key;
-			const xmlObjValue = formatMultilineValue(JSON.stringify((jsValue as any)[key]), resultingIndent, optionsIndent);
+			const xmlObjValue = formatMultilineValue(JSON.stringify((jsValue as any)[key]), resultingIndent, optionsIndent, compact);
 			arr.push(`${xmlObjKey}: ${xmlObjValue}`);
 		}
 		result += arr.join(`,\n`);
@@ -53,18 +144,25 @@ function formatMultilineValue(value: string, indent: string, optionsIndent: stri
 		const arr: string[] = [];
 		result += `[\n`;
 		for (const item of jsValue) {
-			const formattedItem = formatMultilineValue(JSON.stringify(item), indent, optionsIndent);
-			if (formattedItem.includes('\n')) {
-				const itemLines = formattedItem.split('\n');
-				const adjustedLines = itemLines.map((line, index) => {
-					if (index === 0 || index === itemLines.length - 1) {
-						return line;
-					}
-					return `${optionsIndent}${line}`;
-				});
-				arr.push(`${indent}${optionsIndent}${adjustedLines.join('\n')}`);
+			if (compact) {
+				arr.push(`${indent}${optionsIndent}${formatCompactValue(JSON.stringify(item))}`);
 			} else {
-				arr.push(`${indent}${optionsIndent}${formattedItem}`);
+				const formattedItem = formatMultilineValue(JSON.stringify(item), indent, optionsIndent);
+				if (formattedItem.includes('\n')) {
+					const itemLines = formattedItem.split('\n');
+					const adjustedLines = itemLines.map((line, index) => {
+						if (index === 0) {
+							return line;
+						}
+						if (index === itemLines.length - 1) {
+							return `${indent}${optionsIndent}${line.trimStart()}`;
+						}
+						return `${optionsIndent}${line}`;
+					});
+					arr.push(`${indent}${optionsIndent}${adjustedLines.join('\n')}`);
+				} else {
+					arr.push(`${indent}${optionsIndent}${formattedItem}`);
+				}
 			}
 		}
 		result += arr.join(`,\n`);
@@ -170,7 +268,7 @@ function reindentBindingValue(value: string, baseIndent: string, optionsIndent: 
 	return resultLines.join('\n');
 }
 
-function reindentObjectAttribute(value: string, baseIndent: string, optionsIndent: string): string {
+function reindentObjectAttribute(value: string, baseIndent: string, optionsIndent: string, compact?: boolean): string {
 	const openIndex = value.indexOf('{');
 	const closeIndex = value.lastIndexOf('}');
 	if (openIndex === -1 || closeIndex === -1 || closeIndex <= openIndex) {
@@ -196,7 +294,8 @@ function reindentObjectAttribute(value: string, baseIndent: string, optionsInden
 			const formatted = formatMultilineValue(
 				JSON.stringify(parsed),
 				spaces(indentFromString(attrIndent)),
-				optionsIndent
+				optionsIndent,
+				compact
 			);
 			const formattedLines = formatted.split('\n');
 			const resultLines: string[] = [];
@@ -232,7 +331,7 @@ function reindentObjectAttribute(value: string, baseIndent: string, optionsInden
 	return `${lines.join('\n')}\n${attrIndent}}`;
 }
 
-export async function formatXml(xml: string, options: { indent: string; sortAttributes: boolean }): Promise<string> {
+export async function formatXml(xml: string, options: { indent: string; sortAttributes: boolean; compactBinding?: boolean }): Promise<string> {
 	const { parseXML } = await import('xml_parser');
 	const parsed = parseXML(xml);
 	if (!parsed) {
@@ -243,7 +342,7 @@ export async function formatXml(xml: string, options: { indent: string; sortAttr
 	return formatted.trim() + '\n';
 }
 
-function formatNode(node: XmlNode, level: number, options: { indent: string; sortAttributes: boolean }): string {
+function formatNode(node: XmlNode, level: number, options: { indent: string; sortAttributes: boolean; compactBinding?: boolean }): string {
 	const indent = options.indent.repeat(level);
 	let result = '';
 
@@ -264,14 +363,14 @@ function formatNode(node: XmlNode, level: number, options: { indent: string; sor
 			value = value.replace(/&&/g, '&amp;&amp;');
 			value = escapeXmlAmpersands(value);
 			if (value.includes('{') && value.includes('}')) {
-				value = reindentObjectAttribute(value, `${indent}${options.indent}`, options.indent);
+				value = reindentObjectAttribute(value, `${indent}${options.indent}`, options.indent, options.compactBinding);
 			}
 			if (value.includes('\n')) {
 				attrs.push(`
 ${indent}${options.indent}${key}="${value}"`);
 			} else if (isParsable(value)) {
 				attrs.push(`
-${indent}${options.indent}${key}="${formatMultilineValue(value, indent, options.indent)}"`);
+${indent}${options.indent}${key}="${formatMultilineValue(value, indent, options.indent, options.compactBinding)}"`);
 			} else if (keys.length === 1) {
 				attrs.push(` ${key}="${value}"`);
 			} else {

@@ -8,6 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
 				const config = vscode.workspace.getConfiguration("xmlFormatter");
 				const defaultConfig = vscode.workspace.getConfiguration("editor", document.uri);
 				const sortAttributes = config.get<boolean>("sortAttributes", true);
+				const compactBinding = config.get<boolean>("compactBinding", false);
 				let useSpaces = config.get<boolean|undefined>("indentWithSpaces");
 				let indentSize = config.get<number|undefined>("indentSize");
 				
@@ -28,7 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
 				const fullText = document.getText();
 				const formatted = await formatXml(fullText, {
 					indent: useSpaces ? " ".repeat(indentSize) : "\t",
-					sortAttributes
+					sortAttributes,
+					compactBinding
 				});
 
 				const range = new vscode.Range(

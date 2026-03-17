@@ -90,7 +90,7 @@ describe('xml formatter', () => {
     id="subprojectsTable"
     includeItemInSelection="true"
     itemPress=".onSelectSubproject"
-    items="{\n        path: 'ToSubprojects',\n        parameters: {\n            expand: 'ToContentGrps,ToLanguages'\n        },\n        templateShareable: false\n        }"
+    items="{\n        path: 'ToSubprojects',\n        parameters: {\n            expand: 'ToContentGrps,ToLanguages'\n        },\n        templateShareable: false\n    }"
     mode="SingleSelectMaster"
     noDataText="{i18n>no_subprojects}"
     width="100%" />\n`;
@@ -141,7 +141,7 @@ describe('xml formatter', () => {
       const objMultiLine = '.onLiveChange { parts: [ {path: \'/InputValue2\'}, {path: \'/InputValue\'} ] }';
       const objMultiLineResult = reindentObjectAttribute(objMultiLine, '    ', '    ');
       expect(objMultiLineResult).to.equal(
-        ".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n        },\n            {\n                path: '/InputValue'\n        }\n        ]\n    }"
+        ".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n            },\n            {\n                path: '/InputValue'\n            }\n        ]\n    }"
       );
 
       const objNoPrefix = '{path:\'/InputValue2\', formatter:\'x\'}';
@@ -202,7 +202,7 @@ describe('xml formatter', () => {
 
   it('reformats liveChange with multiline nested parts array containing objects', async () => {
     const source = `<Input\n    liveChange=".onLiveChange {\n                parts: [ {path: '/InputValue2'}, \n    {path: '/InputValue'}\n    ],\n                formatter: '.formatter.getValueLiveUpdate'\n            }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />`;
-    const expected = `<Input\n    liveChange=".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n        },\n            {\n                path: '/InputValue'\n        }\n        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />\n`;
+    const expected = `<Input\n    liveChange=".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n            },\n            {\n                path: '/InputValue'\n            }\n        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
