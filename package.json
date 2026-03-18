@@ -2,7 +2,7 @@
   "name": "xml-formatter",
   "displayName": "XML Formatter Custom",
   "description": "Formats XML files with custom indentation, attributes on new lines, multiline value handling, and optional attribute sorting.",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "Dzmitry-Zakhar",
   "repository": {
     "type": "git",

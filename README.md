@@ -31,14 +31,14 @@ When `compactBinding` is `false` (default), each property of an array item is pl
     text="{
         parts: [
             {
-                path: 'ReqDeliveryDate',
+                path: 'DeliveryDate',
                 type: 'sap.ui.model.type.Date',
                 formatOptions: {
                     style: 'long'
                 }
             },
             {
-                path: 'ReqDeliveryTimezone'
+                path: 'DeliveryTimeZone'
             }
         ]
     }" />
@@ -50,8 +50,8 @@ When `compactBinding` is `true`, each array item is kept on a single line:
 <Text
     text="{
         parts: [
-            { path: 'ReqDeliveryDate', type: 'sap.ui.model.type.Date', formatOptions: { style: 'long' }},
-            { path: 'ReqDeliveryTimezone' }
+            { path: 'DeliveryDate', type: 'sap.ui.model.type.Date', formatOptions: { style: 'long' }},
+            { path: 'DeliveryTimeZone' }
         ]
     }" />
 

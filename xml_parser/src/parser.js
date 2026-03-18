@@ -75,7 +75,6 @@ export function parseXML(xml) {
   }
 
   const cleaned = xml
-    .replace(/<!--([\s\S]*?)-->/g, '')
     .replace(/<\?([\s\S]*?)\?>/g, '')
     .trim();
 
@@ -85,6 +84,15 @@ export function parseXML(xml) {
 
     while (i < str.length) {
       if (str[i] === '<') {
+        // Handle comments
+        if (str.slice(i, i + 4) === '<!--') {
+          const end = str.indexOf('-->', i + 4);
+          if (end === -1) throw new Error('Malformed XML: unclosed comment');
+          result.push(str.slice(i, end + 3));
+          i = end + 3;
+          continue;
+        }
+
         let j = i + 1;
         let inQuote = null;
 
@@ -133,6 +141,15 @@ export function parseXML(xml) {
 
   for (const token of tokens) {
     if (!token.trim()) continue;
+
+    if (token.startsWith('<!--')) {
+      const commentContent = token.slice(4, -3);
+      const parent = stack[stack.length - 1];
+      if (parent) {
+        parent.children.push({ comment: commentContent });
+      }
+      continue;
+    }
 
     if (token.startsWith('</')) {
       stack.pop();

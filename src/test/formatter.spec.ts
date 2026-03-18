@@ -23,7 +23,8 @@ describe('xml formatter', () => {
       + '    value="{/InputValue2}"\n'
       + '    visible="{= \${model>/path} &amp;&amp;\n'
       + '        \${model>/path2}\n'
-      + '    }" />\n';
+      + '    }"\n'
+      + '/>\n';
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
@@ -93,7 +94,8 @@ describe('xml formatter', () => {
     items="{\n        path: 'ToSubprojects',\n        parameters: {\n            expand: 'ToContentGrps,ToLanguages'\n        },\n        templateShareable: false\n    }"
     mode="SingleSelectMaster"
     noDataText="{i18n>no_subprojects}"
-    width="100%" />\n`;
+    width="100%"
+/>\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
@@ -165,6 +167,28 @@ describe('xml formatter', () => {
     expect(formatted).to.equal(expected);
   });
 
+  it('preserves XML comments as children during formatting', async () => {
+    const source = `<Root><!-- first comment --><Child id="c1" /><Child id="c2" /><!-- last comment --></Root>`;
+    const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
+    expect(formatted).to.include('<!-- first comment -->');
+    expect(formatted).to.include('<!-- last comment -->');
+    const lines = formatted.split('\n');
+    const commentLine = lines.find(l => l.includes('<!-- first comment -->'));
+    expect(commentLine).to.match(/^    /); // indented as child
+  });
+
+  it('places closing bracket on its own line when element has multiple attributes', async () => {
+    const source = `<Input visible="true" id="inputID" />`;
+    const formatted = await formatXml(source, { indent: '  ', sortAttributes: true });
+    expect(formatted).to.equal('<Input\n  id="inputID"\n  visible="true"\n/>\n');
+  });
+
+  it('keeps closing bracket inline when element has a single attribute', async () => {
+    const source = `<Input visible="true" />`;
+    const formatted = await formatXml(source, { indent: '  ', sortAttributes: true });
+    expect(formatted).to.equal('<Input visible="true" />\n');
+  });
+
   it('reformats liveChange object parameter expression values with multiline indentation', async () => {
     const source = `<Input
     liveChange=".onLiveChange { parts: [
@@ -180,7 +204,8 @@ describe('xml formatter', () => {
     value="{/InputValue2}"
     visible="{= \${model>/path} &amp;&amp;
         \${model>/path2}
-    }" />\n`;
+    }"
+/>\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
@@ -194,7 +219,7 @@ describe('xml formatter', () => {
     const expected = `<Input\n    liveChange=".onLiveChange {\n        parts: [
             '/InputValue2',
             '/InputValue'
-        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />\n`;
+        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }"\n/>\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
@@ -202,7 +227,7 @@ describe('xml formatter', () => {
 
   it('reformats liveChange with multiline nested parts array containing objects', async () => {
     const source = `<Input\n    liveChange=".onLiveChange {\n                parts: [ {path: '/InputValue2'}, \n    {path: '/InputValue'}\n    ],\n                formatter: '.formatter.getValueLiveUpdate'\n            }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />`;
-    const expected = `<Input\n    liveChange=".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n            },\n            {\n                path: '/InputValue'\n            }\n        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />\n`;
+    const expected = `<Input\n    liveChange=".onLiveChange {\n        parts: [\n            {\n                path: '/InputValue2'\n            },\n            {\n                path: '/InputValue'\n            }\n        ],\n        formatter: '.formatter.getValueLiveUpdate'\n    }"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }"\n/>\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);
@@ -210,7 +235,7 @@ describe('xml formatter', () => {
 
   it('reindents multiline SAPUI5 binding expressions so continued lines are indented', async () => {
     const source = `<Input\n    liveChange=".onLiveChange"\n    value="{/InputValue2}" visible="{= \${model>/path} &amp;&amp;\n    \${model>/path2}\n    }" />`;
-    const expected = `<Input\n    liveChange=".onLiveChange"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }" />\n`;
+    const expected = `<Input\n    liveChange=".onLiveChange"\n    value="{/InputValue2}"\n    visible="{= \${model>/path} &amp;&amp;\n        \${model>/path2}\n    }"\n/>\n`;
 
     const formatted = await formatXml(source, { indent: '    ', sortAttributes: true });
     expect(formatted).to.equal(expected);

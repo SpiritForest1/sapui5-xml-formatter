@@ -1,7 +1,7 @@
 export type XmlNode = {
 	tagName: string;
 	attributes?: Record<string, string>;
-	children?: Array<XmlNode | { text: string }>;
+	children?: Array<XmlNode | { text: string } | { comment: string }>;
 };
 
 function normalizeString(value: string) {
@@ -368,11 +368,11 @@ function formatNode(node: XmlNode, level: number, options: { indent: string; sor
 			if (value.includes('\n')) {
 				attrs.push(`
 ${indent}${options.indent}${key}="${value}"`);
+			} else if (keys.length === 1) {
+				attrs.push(` ${key}="${value}"`);
 			} else if (isParsable(value)) {
 				attrs.push(`
 ${indent}${options.indent}${key}="${formatMultilineValue(value, indent, options.indent, options.compactBinding)}"`);
-			} else if (keys.length === 1) {
-				attrs.push(` ${key}="${value}"`);
 			} else {
 				attrs.push(`
 ${indent}${options.indent}${key}="${value}"`);
@@ -380,27 +380,37 @@ ${indent}${options.indent}${key}="${value}"`);
 		}
 	}
 
-	const childElements = (node.children || []).filter((c): c is XmlNode => Boolean((c as XmlNode).tagName));
-	const textContent = (node.children || [])
+	const children = node.children || [];
+	const childNodes = children.filter(c =>
+		Boolean((c as XmlNode).tagName) || (c as any).comment !== undefined
+	);
+	const textContent = children
 		.filter((c): c is { text: string } => 'text' in c && (c as any).text?.trim())
 		.map((c) => (c as { text: string }).text.trim())
 		.join(' ');
 
+	const isMultilineAttrs = attrs.some(a => a.startsWith('\n'));
+
 	result += indent + `<${tagName}`;
 	if (attrs.length > 0) result += attrs.join('');
-	result += '>';
 
-	if (childElements.length > 0) {
+	if (childNodes.length > 0) {
+		result += isMultilineAttrs ? `\n${indent}>` : '>';
 		result += '\n';
-		for (const child of childElements) {
-			result += formatNode(child, level + 1, options) + '\n\n';
+		for (const child of childNodes) {
+			if ((child as any).comment !== undefined) {
+				result += `${indent}${options.indent}<!--${(child as any).comment}-->\n`;
+			} else {
+				result += formatNode(child as XmlNode, level + 1, options) + '\n\n';
+			}
 		}
 		result = result.trimEnd() + '\n';
 		result += indent + `</${tagName}>`;
 	} else if (textContent) {
+		result += isMultilineAttrs ? `\n${indent}>` : '>';
 		result += textContent + `</${tagName}>`;
 	} else {
-		result = result.replace(/>$/, ' />');
+		result += isMultilineAttrs ? `\n${indent}/>` : ' />';
 	}
 
 	return result;
